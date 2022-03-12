@@ -1,8 +1,6 @@
 package grpc.route.server;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
 
 import com.google.protobuf.ByteString;
@@ -40,8 +38,7 @@ public class RouteServerImpl extends RouteServiceImplBase {
 	/**
 	 * TODO refactor this!
 	 * 
-	 * @param path
-	 * @param payload
+	 * @param msg
 	 * @return
 	 */
 	protected ByteString process(route.Route msg) {
@@ -51,8 +48,8 @@ public class RouteServerImpl extends RouteServiceImplBase {
 		System.out.println("-- got: " + msg.getOrigin() + ", path: " + msg.getPath() + ", with: " + content);
 
 		// TODO complete processing
-		final String blank = "blank";
-		byte[] raw = blank.getBytes();
+		//final String blank = "blank";
+		byte[] raw = content.getBytes();
 
 		return ByteString.copyFrom(raw);
 	}
@@ -114,9 +111,24 @@ public class RouteServerImpl extends RouteServiceImplBase {
 
 		// do the work
 		builder.setPayload(process(request));
-
+		try {
+			writeToFile(builder.getPayload(), builder.getPath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		route.Route rtn = builder.build();
 		responseObserver.onNext(rtn);
 		responseObserver.onCompleted();
+	}
+
+	void writeToFile(ByteString content, String path) throws IOException {
+		File file = new File(path);
+		if (!file.exists()) {
+			//boolean createdDir = file.mkdirs(); // If the directory containing the file and/or its parent(s) does not exist
+			boolean createdFile = file.createNewFile();
+			if (/*!createdDir || */!createdFile) throw new IOException();
+		}
+		FileWriter writer = new FileWriter(file);
+		writer.write(content.toStringUtf8());
 	}
 }

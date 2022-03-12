@@ -7,6 +7,9 @@ import io.grpc.ManagedChannelBuilder;
 import route.Route;
 import route.RouteServiceGrpc;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+
 /**
  * copyright 2018, gash
  *
@@ -27,20 +30,21 @@ public class RouteClient {
 	private static long clientID = 501;
 	private static int port = 2345;
 
-	public static void main(String[] args) {
-		ManagedChannel ch = ManagedChannelBuilder.forAddress("localhost", RouteClient.port).usePlaintext().build();
+	public static void main(String[] args) throws IOException {
+		ManagedChannel ch = ManagedChannelBuilder.forAddress(args[0], RouteClient.port).usePlaintext().build();
 
 		RouteServiceGrpc.RouteServiceBlockingStub stub = RouteServiceGrpc.newBlockingStub(ch);
 
-		int I = 10;
+		int I = 1;
 		for (int i = 0; i < I; i++) {
 			Route.Builder bld = Route.newBuilder();
 			bld.setId(i);
 			bld.setOrigin(RouteClient.clientID);
-			bld.setPath("/to/somewhere");
+			bld.setPath("./received/info.txt");
 
-			byte[] hello = "hello".getBytes();
-			bld.setPayload(ByteString.copyFrom(hello));
+			//byte[] hello = "hello".getBytes();
+			byte[] bytes = getFileBytes(args[1]);
+			bld.setPayload(ByteString.copyFrom(bytes));
 
 			// blocking!
 			Route r = stub.request(bld.build());
@@ -51,5 +55,15 @@ public class RouteClient {
 		}
 
 		ch.shutdown();
+	}
+
+	static byte[] getFileBytes(String filename) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			builder.append(line);
+		}
+		return builder.toString().getBytes(StandardCharsets.UTF_8);
 	}
 }
