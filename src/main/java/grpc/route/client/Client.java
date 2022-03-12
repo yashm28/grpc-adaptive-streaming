@@ -29,7 +29,7 @@ public class Client {
             bld.setOffset(offset + 1);
             bld.setOrigin(Client.clientID);
             bld.setDestination(destination);
-            bld.setPath("./sent/info.txt");
+            bld.setPath("./sent/Ecoli.txt");
 
             // blocking!
             Response r = stub.request(bld.build());
@@ -39,7 +39,7 @@ public class Client {
             System.out.println("reply: " + r.getOffset() + ", from: " + r.getOrigin() + ", payload: " + payload);
             try {
                 if (!r.getLast()) {
-                    writeToFile("./received/info.txt", r.getPayload());
+                    writeToFile("./received/Ecoli.txt", r.getPayload());
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -65,7 +65,7 @@ public class Client {
 //        output.write(data.toByteArray());
 //        output.flush();
 //        output.close();
-        FileWriter writer = new FileWriter(file);
+        FileWriter writer = new FileWriter(file, true);
         writer.write(data.toStringUtf8());
         writer.flush();
         writer.close();
