@@ -5,7 +5,7 @@ package route;
 
 // a service interface (contract)
 
-service RouteService {
+/*service RouteService {
    rpc request(Route) returns (Route) {}
 }
 
@@ -18,5 +18,28 @@ message Route {
   int64 destination = 3;
   string path = 4;
   bytes payload = 5;
+}*/
+
+service RequestService {
+  rpc request(Request) returns (Response) {}
 }
 
+service AckService {
+  rpc request(Response) returns (Request) {}
+}
+
+message Request {
+  optional int64 offset = 1;
+  int64 origin = 2;
+  int64 destination = 3;
+  string path = 4;
+}
+
+message Response {
+  int64 offset = 1;
+  int64 origin = 2;
+  int64 destination = 3;
+  bytes payload = 4;
+  bool last = 5;
+  string path = 6;
+}
