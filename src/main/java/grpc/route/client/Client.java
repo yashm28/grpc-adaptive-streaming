@@ -1,10 +1,15 @@
 package grpc.route.client;
 
+import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import route.Request;
 import route.RequestServiceGrpc;
 import route.Response;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class Client {
     private static long clientID = 501;
@@ -16,7 +21,7 @@ public class Client {
         RequestServiceGrpc.RequestServiceBlockingStub stub = RequestServiceGrpc.newBlockingStub(ch);
 
         boolean last = false;
-        long offset = 0;
+        long offset = -1;
         long destination = 0;
         while(!last) {
             Request.Builder bld = Request.newBuilder();
@@ -31,11 +36,34 @@ public class Client {
             // TODO response handling
             String payload = new String(r.getPayload().toByteArray());
             System.out.println("reply: " + r.getOffset() + ", from: " + r.getOrigin() + ", payload: " + payload);
+            try {
+                if (!r.getLast()) {
+                    writeToFile("./received/info.txt", r.getPayload());
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            System.out.println("Client: " + r.getLast());
             last = r.getLast();
+            offset = r.getOffset();
             destination = r.getDestination();
         }
 
         ch.shutdown();
+    }
+
+    static void writeToFile(String path, ByteString data) throws IOException {
+        File file = new File(path);
+        if (!file.exists()) {
+            if(!file.createNewFile()) {
+                throw new IOException();
+            }
+        }
+        FileOutputStream output = new FileOutputStream("filename", true);
+        System.out.println(data.toStringUtf8());
+        output.write(data.toByteArray());
+        output.flush();
+        output.close();
     }
 
 }

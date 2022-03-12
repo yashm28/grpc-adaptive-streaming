@@ -90,15 +90,45 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         route.Response.Builder builder = route.Response.newBuilder();
 
         // routing/header information
-        builder.setOffset(1);
         builder.setOrigin(RequestServer.getInstance().getServerID());
         builder.setDestination(request.getOrigin());
-        builder.setPayload(ByteString.copyFrom("Hello".getBytes(StandardCharsets.UTF_8)));
-        builder.setLast(true);
-        route.Response rtn = builder.build();
+        try {
+            ByteOffset bo = readFile(request.getPath(), request.getOffset());
+            builder.setPayload(ByteString.copyFrom(bo.data));
+            builder.setLast(bo.offset == -1);
+            builder.setOffset(bo.offset);
+            route.Response rtn = builder.build();
 
-        responseObserver.onNext(rtn);
-        responseObserver.onCompleted();
+            responseObserver.onNext(rtn);
+            responseObserver.onCompleted();
+        } catch (IOException ex){
+            ex.printStackTrace();
+        }
+
+    }
+
+    ByteOffset readFile(String path, long offset) throws IOException {
+        File file = new File(path);
+        if (!file.exists()) {
+            if(!file.createNewFile()) {
+                throw new IOException();
+            }
+        }
+        RandomAccessFile raf = new RandomAccessFile(file, "r");
+        raf.seek(offset);
+        byte[] data = new byte[4096];
+        long newOffset = raf.read(data);
+        raf.close();
+        return new ByteOffset(newOffset, data);
+    }
+
+    class ByteOffset {
+        protected long offset;
+        protected byte[] data;
+        public ByteOffset(long offset, byte[] data) {
+            this.offset = offset;
+            this.data = data;
+        }
     }
 
 }
