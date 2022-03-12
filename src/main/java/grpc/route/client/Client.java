@@ -9,6 +9,7 @@ import route.Response;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class Client {
@@ -59,11 +60,15 @@ public class Client {
                 throw new IOException();
             }
         }
-        FileOutputStream output = new FileOutputStream("filename", true);
-        System.out.println(data.toStringUtf8());
-        output.write(data.toByteArray());
-        output.flush();
-        output.close();
+//        FileOutputStream output = new FileOutputStream("filename", true);
+//        System.out.println(data.toStringUtf8());
+//        output.write(data.toByteArray());
+//        output.flush();
+//        output.close();
+        FileWriter writer = new FileWriter(file);
+        writer.write(data.toStringUtf8());
+        writer.flush();
+        writer.close();
     }
 
 }

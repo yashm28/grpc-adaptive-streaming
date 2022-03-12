@@ -117,9 +117,17 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         raf.seek(offset);
         byte[] data = new byte[4096];
-        long newOffset = raf.read(data);
+        int readBytes = raf.read(data);
+        if (readBytes == -1) {
+            return new ByteOffset(-1, new byte[0]);
+        }
+        if (readBytes != data.length) {
+            byte[] smallerData = new byte[readBytes];
+            System.arraycopy(data, 0, smallerData, 0, readBytes);
+            return new ByteOffset(offset + readBytes, smallerData);
+        }
         raf.close();
-        return new ByteOffset(newOffset, data);
+        return new ByteOffset(offset + readBytes, data);
     }
 
     class ByteOffset {
