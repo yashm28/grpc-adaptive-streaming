@@ -60,15 +60,15 @@ public class Client {
                 throw new IOException();
             }
         }
-//        FileOutputStream output = new FileOutputStream("filename", true);
-//        System.out.println(data.toStringUtf8());
-//        output.write(data.toByteArray());
-//        output.flush();
-//        output.close();
-        FileWriter writer = new FileWriter(file, true);
-        writer.write(data.toStringUtf8());
-        writer.flush();
-        writer.close();
+        FileOutputStream output = new FileOutputStream(path, true);
+        System.out.println(data.toStringUtf8());
+        output.write(data.toByteArray());
+        output.flush();
+        output.close();
+//        FileWriter writer = new FileWriter(file, true);
+//        writer.write(data.toStringUtf8());
+//        writer.flush();
+//        writer.close();
     }
 
 }

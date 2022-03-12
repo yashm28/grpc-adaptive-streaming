@@ -116,7 +116,7 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         }
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         raf.seek(offset);
-        byte[] data = new byte[4096];
+        byte[] data = new byte[4096000];
         int readBytes = raf.read(data);
         if (readBytes == -1) {
             return new ByteOffset(-1, new byte[0]);
