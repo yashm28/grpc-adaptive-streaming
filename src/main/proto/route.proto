@@ -33,7 +33,8 @@ message Request {
   int64 origin = 2;
   int64 destination = 3;
   string path = 4;
-  optional int64 response_time = 5;
+  int64 response_time = 5;
+  int64 chunk_size = 6;
 }
 
 message Response {

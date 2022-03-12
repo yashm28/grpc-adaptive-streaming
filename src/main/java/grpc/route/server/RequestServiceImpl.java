@@ -93,7 +93,9 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         builder.setOrigin(RequestServer.getInstance().getServerID());
         builder.setDestination(request.getOrigin());
         try {
-            ByteOffset bo = readFile(request.getPath(), request.getOffset());
+            ByteOffset bo = readFile(
+                    request.getPath(), request.getOffset(), request.getResponseTime(), request.getChunkSize()
+            );
             builder.setPayload(ByteString.copyFrom(bo.data));
             builder.setLast(bo.offset == -1);
             builder.setOffset(bo.offset);
@@ -107,7 +109,7 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
 
     }
 
-    ByteOffset readFile(String path, long offset) throws IOException {
+    ByteOffset readFile(String path, long offset, long time, long chunkSize) throws IOException {
         File file = new File(path);
         if (!file.exists()) {
             if(!file.createNewFile()) {
@@ -116,7 +118,9 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         }
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         raf.seek(offset);
-        byte[] data = new byte[4096000];
+        if (time > 2000) chunkSize /= 2;
+        if (time < 1000) chunkSize *= 2;
+        byte[] data = new byte[(int)chunkSize];
         int readBytes = raf.read(data);
         if (readBytes == -1) {
             return new ByteOffset(-1, new byte[0]);

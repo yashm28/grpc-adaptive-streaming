@@ -25,6 +25,7 @@ public class Client {
         long offset = -1;
         long destination = 0;
         long responseTime = 200;
+        long chunkSize = 4096;
         while(!last) {
             Request.Builder bld = Request.newBuilder();
             bld.setOffset(offset + 1);
@@ -32,6 +33,7 @@ public class Client {
             bld.setDestination(destination);
             bld.setPath("./sent/test.txt");
             bld.setResponseTime(responseTime);
+            bld.setChunkSize(chunkSize);
 
             long start = System.currentTimeMillis();
             // blocking!
@@ -52,6 +54,7 @@ public class Client {
             offset = r.getOffset();
             destination = r.getDestination();
             responseTime = end - start;
+            chunkSize = r.getOffset() - offset;
         }
 
         ch.shutdown();
