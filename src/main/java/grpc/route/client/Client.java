@@ -24,13 +24,13 @@ public class Client {
         boolean last = false;
         long offset = -1;
         long destination = 0;
-        long responseTime = 0;
+        long responseTime = 200;
         while(!last) {
             Request.Builder bld = Request.newBuilder();
             bld.setOffset(offset + 1);
             bld.setOrigin(Client.clientID);
             bld.setDestination(destination);
-            bld.setPath("./sent/Ecoli.txt");
+            bld.setPath("./sent/test.txt");
             bld.setResponseTime(responseTime);
 
             long start = System.currentTimeMillis();
@@ -39,10 +39,10 @@ public class Client {
             long end = System.currentTimeMillis();
             // TODO response handling
             String payload = new String(r.getPayload().toByteArray());
-            System.out.println("reply: " + r.getOffset() + ", from: " + r.getOrigin() + ", time: " + (end - start));
+            System.out.println("reply: " + (r.getOffset() - offset) + ", from: " + r.getOrigin() + ", time: " + (end - start));
             try {
                 if (!r.getLast()) {
-                    writeToFile("./received/Ecoli.txt", r.getPayload());
+                    writeToFile("./received/test.txt", r.getPayload());
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -65,7 +65,7 @@ public class Client {
             }
         }
         FileOutputStream output = new FileOutputStream(path, true);
-        System.out.println(data.toStringUtf8());
+        //System.out.println(data.toStringUtf8());
         output.write(data.toByteArray());
         output.flush();
         output.close();
