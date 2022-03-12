@@ -2,6 +2,7 @@ package grpc.route.server;
 
 import java.io.*;
 import java.util.Properties;
+import java.util.zip.*;
 
 import com.google.protobuf.ByteString;
 
@@ -128,7 +129,27 @@ public class RouteServerImpl extends RouteServiceImplBase {
 			boolean createdFile = file.createNewFile();
 			if (/*!createdDir || */!createdFile) throw new IOException();
 		}
+		textToFile(content, file);
+	}
+
+	void textToFile(ByteString content, File file) throws IOException {
 		FileWriter writer = new FileWriter(file);
 		writer.write(content.toStringUtf8());
+		writer.flush();
+		writer.close();
+	}
+
+	void zipToFile(ByteString content, File file) throws IOException {
+		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(content.toByteArray()));
+		ZipEntry entry = null;
+		ZipOutputStream out = new ZipOutputStream(new CheckedOutputStream(new FileOutputStream(file), new Adler32()));
+		byte[] byteBuff = new byte[4096];
+		int bytesRead = 0;
+		while ((bytesRead = zipStream.read(byteBuff)) > 0) {
+			System.out.println("Bytes Read: " + bytesRead);
+			out.write(byteBuff, 0, bytesRead);
+		}
+		zipStream.close();
+		out.close();
 	}
 }
