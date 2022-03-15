@@ -6,6 +6,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import route.RequestServiceGrpc;
 import route.Response;
+import visualization.Plotter;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,6 +46,7 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
 
         String path = args[0];
         try {
+            Plotter.initPlotter();
             Properties conf = RequestServiceImpl.getConfiguration(new File(path));
             RequestServer.configure(conf);
 
@@ -110,6 +112,9 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
     }
 
     ByteOffset readFile(String path, long offset, long time, long chunkSize) throws IOException {
+        Plotter.chart.updateXYSeries(
+                "a", new double[] { (double)chunkSize }, new double[] { (double)time }, new double[] {}
+        );
         File file = new File(path);
         if (!file.exists()) {
             if(!file.createNewFile()) {
@@ -118,8 +123,10 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         }
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         raf.seek(offset);
+        System.out.println(chunkSize + " " + time);
         if (time > 2000) chunkSize /= 2;
-        if (time < 1000) chunkSize *= 2;
+        else if (time < 1000) chunkSize *= 1.5;
+        else chunkSize += 2048;
         byte[] data = new byte[(int)chunkSize];
         int readBytes = raf.read(data);
         if (readBytes == -1) {
@@ -134,7 +141,7 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         return new ByteOffset(offset + readBytes, data);
     }
 
-    class ByteOffset {
+    static class ByteOffset {
         protected long offset;
         protected byte[] data;
         public ByteOffset(long offset, byte[] data) {

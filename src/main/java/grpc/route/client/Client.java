@@ -51,10 +51,10 @@ public class Client {
             }
             System.out.println("Client: " + r.getLast());
             last = r.getLast();
+            chunkSize = r.getOffset() - offset - 1;
             offset = r.getOffset();
             destination = r.getDestination();
             responseTime = end - start;
-            chunkSize = r.getOffset() - offset;
         }
 
         ch.shutdown();
