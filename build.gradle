@@ -50,3 +50,8 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+task execute(type:JavaExec) {
+    main = 'grpc.route.server.RequestServiceImpl'
+    classpath = sourceSets.main.runtimeClasspath
+}

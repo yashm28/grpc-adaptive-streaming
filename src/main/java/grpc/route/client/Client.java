@@ -31,7 +31,7 @@ public class Client {
             bld.setOffset(offset + 1);
             bld.setOrigin(Client.clientID);
             bld.setDestination(destination);
-            bld.setPath("./sent/books.zip");
+            bld.setPath("./sent/test.txt");
             bld.setResponseTime(responseTime);
             bld.setChunkSize(chunkSize);
 
@@ -44,15 +44,15 @@ public class Client {
             System.out.println("reply: " + (r.getOffset() - offset) + ", from: " + r.getOrigin() + ", time: " + (end - start));
             try {
                 if (!r.getLast()) {
-                    writeToFile("./received/books.zip", r.getPayload());
+                    writeToFile("./received/test.txt", r.getPayload());
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
             System.out.println("Client: " + r.getLast());
             last = r.getLast();
-            chunkSize = r.getOffset() - offset;
-            offset = r.getOffset() + 1;
+            chunkSize = r.getOffset() - offset - 1;
+            offset = r.getOffset();
             destination = r.getDestination();
             responseTime = end - start;
         }

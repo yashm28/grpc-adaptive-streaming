@@ -13,7 +13,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Properties;
+
+import static visualization.Plotter.xs;
+import static visualization.Plotter.ys;
 
 public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBase {
 
@@ -96,7 +100,8 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         builder.setDestination(request.getOrigin());
         try {
             ByteOffset bo = readFile(
-                    request.getPath(), request.getOffset(), request.getResponseTime(), request.getChunkSize()
+                    request.getPath(), request.getOffset(), request.getResponseTime(),
+                    request.getChunkSize(), request.getOrigin()
             );
             builder.setPayload(ByteString.copyFrom(bo.data));
             builder.setLast(bo.offset == -1);
@@ -111,22 +116,40 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
 
     }
 
-    ByteOffset readFile(String path, long offset, long time, long chunkSize) throws IOException {
-        Plotter.chart.updateXYSeries(
-                "a", new double[] { (double)chunkSize }, new double[] { (double)time }, new double[] {}
-        );
+    ByteOffset readFile(String path, long offset, long time, long chunkSize, long origin) throws IOException {
+
+        if (time > 1000 && time < 2000) chunkSize = Math.min(4098000, chunkSize + 2048);
+        else if (time > 2000) chunkSize /= 2;
+        else if (time < 1000) chunkSize = Math.min(4098000, chunkSize * 2);
+
+        List<Double> xb = xs.get("bytes");
+        List<Double> yb = ys.get("bytes");
+        xb.add(xb.get(xb.size() - 1)  + 1);
+        yb.add(((double)chunkSize));
+        //ys.add((double)time);
+        Plotter.byteChart.updateXYSeries("bytes", xb, yb, null);
+        List<Double> xr = xs.get("response time");
+        List<Double> yr = ys.get("response time");
+        xr.add(xr.get(xr.size() - 1)  + 1);
+        yr.add((double)time);
+        //ys.add((double)time);
+        Plotter.rtChart.updateXYSeries("response time", xr, yr, null);
+        Plotter.bytePanel.revalidate();
+        Plotter.bytePanel.repaint();
+        Plotter.rtPanel.revalidate();
+        Plotter.rtPanel.repaint();
+
         File file = new File(path);
         if (!file.exists()) {
             if(!file.createNewFile()) {
                 throw new IOException();
             }
         }
+
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         raf.seek(offset);
-        System.out.println(chunkSize + " " + time);
-        if (time > 2000) chunkSize /= 2;
-        else if (time < 1000) chunkSize *= 1.5;
-        else chunkSize += 2048;
+        System.out.println(origin + " " + chunkSize + " " + time);
+
         byte[] data = new byte[(int)chunkSize];
         int readBytes = raf.read(data);
         if (readBytes == -1) {
