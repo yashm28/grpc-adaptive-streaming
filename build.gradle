@@ -51,7 +51,12 @@ test {
     useJUnitPlatform()
 }
 
-task execute(type:JavaExec) {
+task runServer(type:JavaExec) {
     main = 'grpc.route.server.RequestServiceImpl'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task runClient(type:JavaExec) {
+    main = 'grpc.route.client.Client'
     classpath = sourceSets.main.runtimeClasspath
 }

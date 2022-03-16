@@ -11,12 +11,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Client {
-    private static long clientID = 501;
-    private static int port = 2345;
+    private static long clientID;
+    private static int port;
 
     public static void main(String[] args) {
+
+        port = Integer.valueOf(args[1]);
+        clientID = Long.valueOf(args[2]);
+        String fileName = args[3];
+
         ManagedChannel ch = ManagedChannelBuilder.forAddress(args[0], Client.port).usePlaintext().build();
 
         RequestServiceGrpc.RequestServiceBlockingStub stub = RequestServiceGrpc.newBlockingStub(ch);
@@ -31,10 +38,10 @@ public class Client {
             bld.setOffset(offset + 1);
             bld.setOrigin(Client.clientID);
             bld.setDestination(destination);
-            bld.setPath("./sent/test.txt");
+            bld.setPath("./sent/" + fileName);
             bld.setResponseTime(responseTime);
             bld.setChunkSize(chunkSize);
-
+//            Request request = bld.build();
             long start = System.currentTimeMillis();
             // blocking!
             Response r = stub.request(bld.build());
@@ -43,8 +50,10 @@ public class Client {
             String payload = new String(r.getPayload().toByteArray());
             System.out.println("reply: " + (r.getOffset() - offset) + ", from: " + r.getOrigin() + ", time: " + (end - start));
             try {
+                String[] split =  fileName.split("\\.");
+                String timestamp = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
                 if (!r.getLast()) {
-                    writeToFile("./received/test.txt", r.getPayload());
+                    writeToFile("./received/" + split[0] + "_" + clientID + "_" + timestamp + "." + split[1] , r.getPayload());
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
