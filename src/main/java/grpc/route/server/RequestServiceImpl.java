@@ -99,10 +99,7 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         builder.setOrigin(RequestServer.getInstance().getServerID());
         builder.setDestination(request.getOrigin());
         try {
-            ByteOffset bo = readFile(
-                    request.getPath(), request.getOffset(), request.getResponseTime(),
-                    request.getChunkSize(), request.getOrigin()
-            );
+            ByteOffset bo = readFile(request);
             builder.setPayload(ByteString.copyFrom(bo.data));
             builder.setLast(bo.offset == -1);
             builder.setOffset(bo.offset);
@@ -116,11 +113,35 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
 
     }
 
-    ByteOffset readFile(String path, long offset, long time, long chunkSize, long origin) throws IOException {
+    ByteOffset readFile(route.Request request) throws IOException {
+        long chunkSize = request.getChunkSize();
+        long time = request.getResponseTime();
+        String path =request.getPath();
+        long offset = request.getOffset();
+        switch (request.getAlgorithm()) {
+            case 1:
+                if (time > 1000 && time < 2000) chunkSize = Math.min(4098000, chunkSize + 2048);
+                else if (time > 2000) chunkSize /= 2;
+                else if (time < 1000) chunkSize = Math.min(4098000, chunkSize * 2);
+                break;
+            case 2:
+                if (request.getSlowStartCompleted()) {
+                    if (request.getPackageIndex() % 5 == 0) {
+                        if (request.getTimeSum() / 5 > 2000) {
+                            chunkSize = Math.min(4098000, chunkSize / 2);
+                        } else if (request.getTimeSum() / 5 < 1000) {
+                            chunkSize = Math.min(4098000, chunkSize + 2048);
+                        }
+                    }
+                } else {
+                    chunkSize = chunkSize = Math.min(4098000, chunkSize * 2);
+                }
+                break;
+            default:
+                chunkSize = 4096000;
+                break;
+        }
 
-        if (time > 1000 && time < 2000) chunkSize = Math.min(4098000, chunkSize + 2048);
-        else if (time > 2000) chunkSize /= 2;
-        else if (time < 1000) chunkSize = Math.min(4098000, chunkSize * 2);
 
         List<Double> xb = xs.get("bytes");
         List<Double> yb = ys.get("bytes");
@@ -148,7 +169,7 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
 
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         raf.seek(offset);
-        System.out.println(origin + " " + chunkSize + " " + time);
+        System.out.println(request.getOrigin() + " " + chunkSize + " " + time);
 
         byte[] data = new byte[(int)chunkSize];
         int readBytes = raf.read(data);

@@ -16,14 +16,14 @@ import java.util.List;
 public class Plotter {
 
     public static final XYChart byteChart = new XYChartBuilder().width(600).height(400)
-            .title("Packet Size vs Response Time")
-            .xAxisTitle("Response Time")
+            .title("Packet Size")
+            .xAxisTitle("Packet #")
             .yAxisTitle("Packet Size")
             .build();
     public static final XYChart rtChart = new XYChartBuilder().width(600).height(400)
-            .title("Packet Size vs Response Time")
-            .xAxisTitle("Response Time")
-            .yAxisTitle("Packet Size")
+            .title("Response Time")
+            .xAxisTitle("Packet #")
+            .yAxisTitle("Response Time")
             .build();
     public static final JPanel bytePanel = new XChartPanel<XYChart>(byteChart);
     public static final JPanel rtPanel = new XChartPanel<XYChart>(rtChart);
