@@ -37,6 +37,9 @@ public class Client {
         int index = 0;
         boolean slowStartCompleted = false;
         long timeSum = 0;
+        double averageTime = 0;
+        double averageChunkSize = 0;
+        String timestamp = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
         while(!last) {
             Request.Builder bld = Request.newBuilder();
             bld.setOffset(offset + 1);
@@ -59,7 +62,6 @@ public class Client {
             System.out.println("reply: " + (r.getOffset() - offset) + ", from: " + r.getOrigin() + ", time: " + (end - start));
             try {
                 String[] split =  fileName.split("\\.");
-                String timestamp = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
                 if (!r.getLast()) {
                     writeToFile("./received/" + split[0] + "_" + clientID + "_" + timestamp + "." + split[1] , r.getPayload());
                 }
@@ -77,9 +79,13 @@ public class Client {
             } else {
                 timeSum = index % 5 == 0 ? responseTime : timeSum + responseTime;
             }
+            index++;
+            averageTime += responseTime;
+            averageChunkSize += chunkSize;
         }
 
         ch.shutdown();
+        System.out.println("Average Time: " + (averageTime / index) + "Average Chunk Size" + (averageChunkSize - chunkSize / index));
     }
 
     static void writeToFile(String path, ByteString data) throws IOException {
