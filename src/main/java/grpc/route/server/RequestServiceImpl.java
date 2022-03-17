@@ -120,17 +120,18 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
         long offset = request.getOffset();
         switch (request.getAlgorithm()) {
             case 1:
-                if (time > 1000 && time < 2000) chunkSize = Math.min(4098000, chunkSize + 2048);
-                else if (time > 2000) chunkSize /= 2;
+                if (time > 1000 && time < 2000) chunkSize = Math.min(4098000, chunkSize + (1024*25));
+                else if (time > 2000) chunkSize /= 1.5;
                 else if (time < 1000) chunkSize = Math.min(4098000, chunkSize * 2);
                 break;
             case 2:
+                System.out.println(request.getSlowStartCompleted() + " " + request.getPackageIndex() + " " + (request.getTimeSum() / 5));
                 if (request.getSlowStartCompleted()) {
                     if (request.getPackageIndex() % 5 == 0) {
                         if (request.getTimeSum() / 5 > 2000) {
-                            chunkSize = Math.min(4098000, chunkSize / 2);
-                        } else if (request.getTimeSum() / 5 < 1000) {
-                            chunkSize = Math.min(4098000, chunkSize + 2048);
+                            chunkSize = Math.min(4098000, (long) (chunkSize * 0.75));
+                        } else if (request.getTimeSum() / 5 < 1800) {
+                            chunkSize = Math.min(4098000, (long) (chunkSize * 1.25));
                         }
                     }
                 } else {
@@ -138,7 +139,7 @@ public class RequestServiceImpl extends RequestServiceGrpc.RequestServiceImplBas
                 }
                 break;
             default:
-                chunkSize = 4096000;
+                chunkSize = 1024*400;
                 break;
         }
 
